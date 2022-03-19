@@ -1,8 +1,8 @@
 CXX = g++
 CC = gcc
-CPPOBJS = src/ui.o
+CPPOBJS = src/mebgui.o examples/guimain.o
 COBJS =
-EDCXXFLAGS = -I ./ -I ./include/ -Wall -pthread $(CXXFLAGS)
+EDCXXFLAGS = -I ./ -I ./include/ -I ./examples/ -Wall -pthread $(CXXFLAGS)
 EDCFLAGS = $(CFLAGS)
 EDLDFLAGS := -lpthread -lm -lmenu -lncurses $(LDFLAGS)
 TARGET = ui.out
@@ -23,8 +23,13 @@ clean:
 	$(RM) *.out
 	$(RM) *.o
 	$(RM) src/*.o
+	$(RM) examples/*.o
 
 .PHONY: spotless
 
 spotless:
+	$(RM) *.out
+	$(RM) *.o
+	$(RM) src/*.o
+	$(RM) examples/*.o
 	$(RM) drivers/*.o
