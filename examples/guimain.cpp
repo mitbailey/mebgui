@@ -70,7 +70,7 @@ int main()
     MEBWindow *win2 = new MEBWindow(0, 0, 10, 10, "Child Window", win1);
 
     MEBWindow *win3 = new MEBWindow(25, 15, 30, 15, "Input Window");
-    MEBMenu *mebmenu1 = Menu(win3, 2, 2, 25, 6, ARRAY_SIZE(menu1_choices), menu1_choices, menu1_choices_desc, "*");
+    MEBMenu *mebmenu1 = new MEBMenu(win3, 2, 2, 25, 6, ARRAY_SIZE(menu1_choices), menu1_choices, menu1_choices_desc, "*");
 
     // Main loop.
     int c;
@@ -85,16 +85,24 @@ int main()
             case KEY_DOWN:
                 // goto program_end;
                 // exit(1);
-                menu_driver(mebmenu1->menu, REQ_DOWN_ITEM);
-                wrefresh(mebmenu1->parent->win);
+                menu_driver(mebmenu1->get_menu(), REQ_DOWN_ITEM);
+                wrefresh(mebmenu1->get_parent()->win);
                 break;
             case KEY_UP:
-                menu_driver(mebmenu1->menu, REQ_UP_ITEM);
-                wrefresh(mebmenu1->parent->win);
+                menu_driver(mebmenu1->get_menu(), REQ_UP_ITEM);
+                wrefresh(mebmenu1->get_parent()->win);
+                break;
+            case KEY_LEFT:
+                mebmenu1->Move(-1, 0);
+                // mebmenu1->Refresh();
+                break;
+            case KEY_RIGHT:
+                mebmenu1->Move(1, 0);
+                // mebmenu1->Refresh();
                 break;
             case '\n':
                 // TODO: Add functionality for other buttons.
-                switch (item_index(current_item(mebmenu1->menu)))
+                switch (item_index(current_item(mebmenu1->get_menu())))
                 {
                 case 0:
                     break;
@@ -116,9 +124,9 @@ int main()
             }
         }
 
-        if (win1->get_x() + win1->get_cols() > t_cols)
+        if (win1->x() + win1->cols() > t_cols)
             forward = 0;
-        else if (win1->get_x() < 1)
+        else if (win1->x() < 1)
             forward = 1;
 
         if (forward)
@@ -142,7 +150,8 @@ program_end:
     delete(win2);
     delete(win3);
 
-    DestroyMEBMenu(mebmenu1);
+    delete(mebmenu1);
+
     ncurses_cleanup();
 
     done = 1;

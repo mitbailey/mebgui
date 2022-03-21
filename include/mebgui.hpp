@@ -14,24 +14,9 @@
 
 #define MIN_WIN_WIDTH 10
 #define MAX_WIN_TITLE 64
+#define MAX_MENU_MARK 64
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-// TODO: Add automatic terminal-size-based resizing.
-// typedef struct MEBWindow MEBWindow;
-// struct MEBWindow
-// {
-//     WINDOW *win;
-//     // If 0, uses x y as absolute screen position.
-//     // If 1, uses the position of the parent window and x y as offsets from the parent's top right corner.
-//     uint8_t rel_pos;
-//     int x;
-//     int y;
-//     MEBWindow *parent;
-//     int cols;
-//     int rows;
-//     char title[32];
-// };
 
 /**
  * @brief To be called at the beginning of the program, initializes NCURSES-specific items.
@@ -45,6 +30,7 @@ void ncurses_init();
  */
 void ncurses_cleanup();
 
+// TODO: Add automatic terminal-size-based resizing.
 class MEBWindow
 {
 public:
@@ -112,10 +98,10 @@ public:
     WINDOW *win;
     MEBWindow *parent;
 
-    int get_x() { return x; };
-    int get_y() { return y; };
-    int get_cols() { return cols; };
-    int get_rows() { return rows; };
+    int x() { return x_; };
+    int y() { return y_; };
+    int cols() { return cols_; };
+    int rows() { return rows_; };
 
     bool is_pos_rel() { return rel_pos; };
     char *get_title() { return title; };
@@ -125,51 +111,74 @@ private:
     void instantiate_window();
     void destroy_window();
 
-    int x;
-    int y;
-    int cols;
-    int rows;
+    int x_;
+    int y_;
+    int cols_;
+    int rows_;
 
     bool rel_pos; // Relative positioning.
     char title[MAX_WIN_TITLE];
 };
 
 /**
- * @brief The MEBMenu type, a wrapper around NCURSES' MENU.
+ * @brief The MEBMenu class, a wrapper around NCURSES' MENU.
  *
  */
-typedef struct
+class MEBMenu
 {
+public:
+    /**
+     * @brief Spawns a menu; constructor.
+     *
+     * @param w Parent MEBWindow.
+     * @param x Parent window relative x-axis offset.
+     * @param y Parent window relative y-axis offset.
+     * @param cols Width.
+     * @param rows Height.
+     * @param n_items Number of items listed in the menu.
+     * @param item_titles List of strings to title each item.
+     * @param item_desc List of strings to describe each item.
+     * @param mark The "You Are Here" indicator.
+     * @return MEBMenu*
+     */
+    MEBMenu(MEBWindow *w, int x, int y, int cols, int rows, int n_items, char *item_titles[], char *item_desc[], const char *mark);
+
+    /**
+     * @brief Moves the menu some delta-position.
+     * 
+     * @param dx 
+     * @param dy 
+     */
+    void Move(int dx, int dy);
+
+    /**
+     * @brief Refreshes the menu.
+     * 
+     */
+    void Refresh();
+
+    /**
+     * @brief Destructor.
+     * 
+     */
+    ~MEBMenu();
+
+    MENU *get_menu() { return menu; };
+    MEBWindow *get_parent() { return parent; };
+
+private:
+    void instantiate_menu();
+    void destroy_menu();
+
+    int x;
+    int y;
+    int rows;
+    int cols;
+    char mark[MAX_MENU_MARK];
     MENU *menu;
     ITEM **items;
     int n_items;
     MEBWindow *parent;
-} MEBMenu;
-
-/**
- * @brief Spawns a menu.
- *
- * @param w Parent MEBWindow.
- * @param x Parent window relative x-axis offset.
- * @param y Parent window relative y-axis offset.
- * @param cols Width.
- * @param rows Height.
- * @param n_items Number of items listed in the menu.
- * @param item_titles List of strings to title each item.
- * @param item_desc List of strings to describe each item.
- * @param mark The "You Are Here" indicator.
- * @return MEBMenu*
- */
-MEBMenu *Menu(MEBWindow *w, int x, int y, int cols, int rows, int n_items, char *item_titles[], char *item_desc[], const char *mark);
-
-/**
- * @brief Must be called when the menu is done with.
- *
- * @param m The MEBMenu.
- */
-void DestroyMEBMenu(MEBMenu *m);
-
-// FOR INTERNAL USE ONLY
-void destroy_menu(MENU *menu, int n_items, ITEM **items);
+};
 
 #endif // MEBGUI_HPP

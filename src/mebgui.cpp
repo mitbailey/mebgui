@@ -66,11 +66,11 @@ MEBWindow::MEBWindow(int x, int y, int cols, int rows, const char *title, MEBWin
     if (cols < min_w)
         cols = min_w;
 
-    this->x = x;
-    this->y = y;
+    this->x_ = x;
+    this->y_ = y;
     this->parent = parent;
-    this->cols = cols;
-    this->rows = rows;
+    this->cols_ = cols;
+    this->rows_ = rows;
     strcpy(this->title, title);
 
     instantiate_window();
@@ -86,43 +86,37 @@ MEBWindow::~MEBWindow()
 // Moves a MEBWindow by some delta-x and delta-y.
 void MEBWindow::Move(int dx, int dy)
 {
-    destroy_window();
-    this->x += dx;
-    this->y += dy;
+    this->x_ += dx;
+    this->y_ += dy;
 
-    instantiate_window();
+    Refresh();
 }
 
 // Moves a MEBWindow to a specific location.
 void MEBWindow::MoveTo(int x, int y)
 {
-    destroy_window();
-    this->x = x;
-    this->y = y;
+    this->x_ = x;
+    this->y_ = y;
 
-    instantiate_window();
+    Refresh();
 }
 
 // Resizes a MEBWindow by some delta-width and delta-height.
 void MEBWindow::Resize(int dcols, int drows)
 {
-    destroy_window();
+    this->cols_ += dcols;
+    this->rows_ += drows;
 
-    this->cols += dcols;
-    this->rows += drows;
-
-    instantiate_window();
+    Refresh();
 }
 
 // Resizes a MEBWindow to a specific size.
 void MEBWindow::ResizeTo(int cols, int rows)
 {
-    destroy_window();
+    this->cols_ = cols;
+    this->rows_ = rows;
 
-    this->cols = cols;
-    this->rows = rows;
-
-    instantiate_window();
+    Refresh();
 }
 
 // Refreshes a MEBWindow.
@@ -132,44 +126,16 @@ void MEBWindow::Refresh()
     instantiate_window();
 }
 
-// Spawns a menu.
-MEBMenu *Menu(MEBWindow *w, int x, int y, int cols, int rows, int n_items, char *item_titles[], char *item_desc[], const char *mark)
-{
-    MEBMenu *m = (MEBMenu *)malloc(sizeof(MEBMenu));
-    m->n_items = n_items;
-    m->parent = w;
-    m->items = (ITEM **)calloc(n_items, sizeof(ITEM *));
-    for (int i = 0; i < n_items; ++i)
-    {
-        m->items[i] = new_item(item_titles[i], item_desc[i]);
-    }
-    m->menu = new_menu((ITEM **)m->items);
-    set_menu_win(m->menu, w->win);
-    set_menu_sub(m->menu, derwin(w->win, rows, cols, x, y));
-    set_menu_mark(m->menu, mark);
-    post_menu(m->menu);
-    wrefresh(w->win);
-
-    return m;
-}
-
-// Must be called when the menu is done with.
-void DestroyMEBMenu(MEBMenu *m)
-{
-    destroy_menu(m->menu, m->n_items, m->items);
-    free(m->items);
-}
-
 // FOR INTERNAL USE ONLY
 void MEBWindow::instantiate_window()
 {
     if (this->parent == nullptr)
     {
-        this->win = newwin(this->rows, this->cols, this->y, this->x);
+        this->win = newwin(this->rows_, this->cols_, this->y_, this->x_);
     }
     else
     {
-        this->win = newwin(this->rows, this->cols, this->y + this->parent->y, this->parent->x + this->parent->cols);
+        this->win = newwin(this->rows_, this->cols_, this->y_ + this->parent->y_, this->parent->x_ + this->parent->cols_);
     }
 
     box(this->win, 0, 0); // 0, 0 gives default characters for the vertical and horizontal lines.
@@ -178,7 +144,7 @@ void MEBWindow::instantiate_window()
     mvwprintw(this->win, 0, 2, " %s ", this->title);
 
     // Draw the window size.
-    mvwprintw(this->win, this->rows - 1, this->cols - 10, " %dx%d ", this->cols, this->rows);
+    mvwprintw(this->win, this->rows_ - 1, this->cols_ - 10, " %dx%d ", this->cols_, this->rows_);
 
     wrefresh(this->win); // Show that box.
 }
@@ -191,8 +157,63 @@ void MEBWindow::destroy_window()
     delwin(win);                                          // and delete
 }
 
+
+// Spawns a menu.
+MEBMenu::MEBMenu(MEBWindow *w, int x, int y, int cols, int rows, int n_items, char *item_titles[], char *item_desc[], const char *mark)
+{
+    // MEBMenu *m = (MEBMenu *)malloc(sizeof(MEBMenu));
+    strcpy(this->mark, mark);
+    this->x = x;
+    this->y = y;
+    this->rows = rows;
+    this->cols = cols;
+    this->n_items = n_items;
+    this->parent = w;
+
+    this->items = (ITEM **)calloc(n_items, sizeof(ITEM *));
+    for (int i = 0; i < n_items; ++i)
+    {
+        this->items[i] = new_item(item_titles[i], item_desc[i]);
+    }
+
+    instantiate_menu();
+}
+
+void MEBMenu::instantiate_menu()
+{
+    this->menu = new_menu((ITEM **)this->items);
+    set_menu_win(menu, parent->win);
+    set_menu_sub(menu, derwin(parent->win, rows, cols, y, x));
+    set_menu_mark(menu, mark);
+    post_menu(menu);
+    wrefresh(parent->win);
+}
+
+// Destructor.
+MEBMenu::~MEBMenu()
+{
+    destroy_menu();
+    free(items);
+}
+
+void MEBMenu::Move(int dx, int dy)
+{
+    x += dx;
+    y += dy;
+
+    Refresh();
+};
+
+void MEBMenu::Refresh()
+{
+    // destroy_menu();
+    unpost_menu(menu);
+    free_menu(menu);
+    instantiate_menu();
+}
+
 // FOR INTERNAL USE ONLY
-void destroy_menu(MENU *menu, int n_items, ITEM **items)
+void MEBMenu::destroy_menu()
 {
     unpost_menu(menu);
     free_menu(menu);
