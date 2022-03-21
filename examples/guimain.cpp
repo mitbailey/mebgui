@@ -61,15 +61,15 @@ int main()
     // Initial setup.
     ncurses_init();
     // Draws a 10x10 window at (0, 0) with title "My Window".
-    MEBWindow *win1 = Window(0, 0, 10, 10, "My Window");
-    MoveWindow(win1, 1, 0);
+    MEBWindow *win1 = new MEBWindow(0, 0, 10, 10, "My Window");
+    win1->Move(1, 0);
 
     // Main loop variables
     int forward = 1;
 
-    MEBWindow *win2 = Window(0, 0, 10, 10, "Child Window", win1);
+    MEBWindow *win2 = new MEBWindow(0, 0, 10, 10, "Child Window", win1);
 
-    MEBWindow *win3 = Window(25, 15, 30, 15, "Input Window");
+    MEBWindow *win3 = new MEBWindow(25, 15, 30, 15, "Input Window");
     MEBMenu *mebmenu1 = Menu(win3, 2, 2, 25, 6, ARRAY_SIZE(menu1_choices), menu1_choices, menu1_choices_desc, "*");
 
     // Main loop.
@@ -116,21 +116,21 @@ int main()
             }
         }
 
-        if (win1->x + win1->cols > t_cols)
+        if (win1->get_x() + win1->get_cols() > t_cols)
             forward = 0;
-        else if (win1->x < 1)
+        else if (win1->get_x() < 1)
             forward = 1;
 
         if (forward)
         {
-            MoveWindow(win1, 1, 0);
+            win1->Move(1, 0);
         }
         else
         {
-            MoveWindow(win1, -1, 0);
+            win1->Move(-1, 0);
         }
 
-        RefreshWindow(win2);
+        win2->Refresh();
         getmaxyx(stdscr, t_rows, t_cols);
 
         usleep(10000);
@@ -138,7 +138,10 @@ int main()
 
 program_end:
     // Cleanup.
-    DestroyMEBWindow(win1);
+    delete(win1);
+    delete(win2);
+    delete(win3);
+
     DestroyMEBMenu(mebmenu1);
     ncurses_cleanup();
 

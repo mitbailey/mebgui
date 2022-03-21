@@ -17,6 +17,8 @@
 #include <string.h>
 #include <math.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <stdexcept>
 
 #include "mebgui.hpp"
 #include "meb_print.h"
@@ -48,10 +50,10 @@ void ncurses_cleanup()
 }
 
 // Spawns a MEBWindow.
-MEBWindow *Window(int x, int y, int cols, int rows, char *title, MEBWindow *parent /* = nullptr */)
+MEBWindow::MEBWindow(int x, int y, int cols, int rows, const char *title, MEBWindow *parent /* = nullptr */)
 {
     if (strlen(title) > MAX_WIN_TITLE)
-        return NULL;
+        throw std::length_error("Title length exceeds maximum.");
 
     int min_w = MIN_WIN_WIDTH;
 
@@ -64,74 +66,70 @@ MEBWindow *Window(int x, int y, int cols, int rows, char *title, MEBWindow *pare
     if (cols < min_w)
         cols = min_w;
 
-    MEBWindow *w = (MEBWindow *)malloc(sizeof(MEBWindow));
+    this->x = x;
+    this->y = y;
+    this->parent = parent;
+    this->cols = cols;
+    this->rows = rows;
+    strcpy(this->title, title);
 
-    w->x = x;
-    w->y = y;
-    w->parent = parent;
-    w->cols = cols;
-    w->rows = rows;
-    strcpy(w->title, title);
-
-    instantiate_window(w);
-
-    return w;
+    instantiate_window();
 }
 
 // Frees window memory; to be called by user at end of window use.
-void DestroyMEBWindow(MEBWindow *w)
+MEBWindow::~MEBWindow()
 {
-    destroy_window(w->win);
-    free(w);
+    destroy_window();
+    // free(this);
 }
 
 // Moves a MEBWindow by some delta-x and delta-y.
-void MoveWindow(MEBWindow *w, int dx, int dy)
+void MEBWindow::Move(int dx, int dy)
 {
-    destroy_window(w->win);
-    w->x += dx;
-    w->y += dy;
+    destroy_window();
+    this->x += dx;
+    this->y += dy;
 
-    instantiate_window(w);
+    instantiate_window();
 }
 
 // Moves a MEBWindow to a specific location.
-void MoveWindowTo(MEBWindow *w, int x, int y)
+void MEBWindow::MoveTo(int x, int y)
 {
-    destroy_window(w->win);
-    w->x = x;
-    w->y = y;
+    destroy_window();
+    this->x = x;
+    this->y = y;
 
-    instantiate_window(w);
+    instantiate_window();
 }
 
 // Resizes a MEBWindow by some delta-width and delta-height.
-void ResizeWindow(MEBWindow *w, int dcols, int drows)
+void MEBWindow::Resize(int dcols, int drows)
 {
-    destroy_window(w->win);
+    destroy_window();
 
-    w->cols += dcols;
-    w->rows += drows;
+    this->cols += dcols;
+    this->rows += drows;
 
-    instantiate_window(w);
+    instantiate_window();
 }
 
 // Resizes a MEBWindow to a specific size.
-void ResizeWindowTo(MEBWindow *w, int cols, int rows)
+void MEBWindow::ResizeTo(int cols, int rows)
 {
-    destroy_window(w->win);
+    destroy_window();
 
-    w->cols = cols;
-    w->rows = rows;
+    this->cols = cols;
+    this->rows = rows;
 
-    instantiate_window(w);
+    instantiate_window();
 }
 
 // Refreshes a MEBWindow.
-void RefreshWindow(MEBWindow *w)
+void MEBWindow::Refresh()
 {
-    destroy_window(w->win);
-    instantiate_window(w);
+    destroy_window();
+    instantiate_window();
 }
 
 // Spawns a menu.
@@ -163,30 +161,30 @@ void DestroyMEBMenu(MEBMenu *m)
 }
 
 // FOR INTERNAL USE ONLY
-void instantiate_window(MEBWindow *w)
+void MEBWindow::instantiate_window()
 {
-    if (w->parent == nullptr)
+    if (this->parent == nullptr)
     {
-        w->win = newwin(w->rows, w->cols, w->y, w->x);
+        this->win = newwin(this->rows, this->cols, this->y, this->x);
     }
     else
     {
-        w->win = newwin(w->rows, w->cols, w->y + w->parent->y, w->parent->x + w->parent->cols);
+        this->win = newwin(this->rows, this->cols, this->y + this->parent->y, this->parent->x + this->parent->cols);
     }
 
-    box(w->win, 0, 0); // 0, 0 gives default characters for the vertical and horizontal lines.
+    box(this->win, 0, 0); // 0, 0 gives default characters for the vertical and horizontal lines.
 
     // Draw the title.
-    mvwprintw(w->win, 0, 2, " %s ", w->title);
+    mvwprintw(this->win, 0, 2, " %s ", this->title);
 
     // Draw the window size.
-    mvwprintw(w->win, w->rows - 1, w->cols - 10, " %dx%d ", w->cols, w->rows);
+    mvwprintw(this->win, this->rows - 1, this->cols - 10, " %dx%d ", this->cols, this->rows);
 
-    wrefresh(w->win); // Show that box.
+    wrefresh(this->win); // Show that box.
 }
 
 // FOR INTERNAL USE ONLY
-void destroy_window(WINDOW *win)
+void MEBWindow::destroy_window()
 {
     wborder(win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '); // Erase frame around the window
     wrefresh(win);                                        // Refresh it (to leave it blank)
