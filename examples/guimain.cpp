@@ -59,7 +59,7 @@ int main()
     getmaxyx(stdscr, t_rows, t_cols);
 
     // Initial setup.
-    ncurses_init();
+    ncurses_init(5);
     // Draws a 10x10 window at (0, 0) with title "My Window".
     MEBWindow *win1 = new MEBWindow(0, 0, 10, 10, "My Window");
     win1->Move(1, 0);

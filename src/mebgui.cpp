@@ -25,24 +25,18 @@
 
 #include "guimain.hpp"
 
-/**
- * @brief To be called at the beginning of the program, initializes NCURSES-specific items.
- * 
- */
-void ncurses_init()
+// To be called at the beginning of the program, initializes NCURSES-specific items.
+void ncurses_init(int timeout)
 {
     initscr();
     cbreak();
     noecho(); // Doesn't echo input during getch().
     keypad(stdscr, TRUE);
-    nodelay(stdscr, true);
+    wtimeout(stdscr, timeout);
     refresh();
 }
 
-/**
- * @brief To be called at the end of the program, cleans up NCURSES-specific items.
- * 
- */
+// To be called at the end of the program, cleans up NCURSES-specific items.
 void ncurses_cleanup()
 {
     endwin();

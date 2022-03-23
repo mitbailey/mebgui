@@ -20,9 +20,10 @@
 
 /**
  * @brief To be called at the beginning of the program, initializes NCURSES-specific items.
- *
+ * 
+ * @param timeout Input timeout.
  */
-void ncurses_init();
+void ncurses_init(int timeout);
 
 /**
  * @brief To be called at the end of the program, cleans up NCURSES-specific items.
