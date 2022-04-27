@@ -60,6 +60,7 @@ int main()
 
     // Initial setup.
     ncurses_init(5);
+
     // Draws a 10x10 window at (0, 0) with title "My Window".
     MEBWindow *win1 = new MEBWindow(0, 0, 10, 10, "My Window");
     win1->Move(1, 0);
@@ -83,8 +84,6 @@ int main()
             switch (c)
             {
             case KEY_DOWN:
-                // goto program_end;
-                // exit(1);
                 menu_driver(mebmenu1->get_menu(), REQ_DOWN_ITEM);
                 wrefresh(mebmenu1->get_parent()->win);
                 break;
@@ -93,12 +92,12 @@ int main()
                 wrefresh(mebmenu1->get_parent()->win);
                 break;
             case KEY_LEFT:
-                mebmenu1->Move(-1, 0);
-                // mebmenu1->Refresh();
+                mebmenu1->get_parent()->Move(-1, 0);
+                mebmenu1->Refresh();
                 break;
             case KEY_RIGHT:
-                mebmenu1->Move(1, 0);
-                // mebmenu1->Refresh();
+                mebmenu1->get_parent()->Move(1, 0);
+                mebmenu1->Refresh();
                 break;
             case '\n':
                 // TODO: Add functionality for other buttons.
@@ -145,6 +144,7 @@ int main()
     }
 
 program_end:
+
     // Cleanup.
     delete(win1);
     delete(win2);
