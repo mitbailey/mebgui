@@ -20,8 +20,8 @@
 #include <cstdlib>
 #include <stdexcept>
 
+// #include "meb_print.h"
 #include "mebgui.hpp"
-#include "meb_print.h"
 
 #include "guimain.hpp"
 
@@ -170,10 +170,10 @@ MEBMenu::MEBMenu(MEBWindow *w, int x, int y, int cols, int rows, int n_items, ch
         this->items[i] = new_item(item_titles[i], item_desc[i]);
     }
 
-    instantiate_menu();
+    InstantiateMenu();
 }
 
-void MEBMenu::instantiate_menu()
+void MEBMenu::InstantiateMenu()
 {
     this->menu = new_menu((ITEM **)this->items);
     set_menu_win(menu, parent->win);
@@ -186,7 +186,7 @@ void MEBMenu::instantiate_menu()
 // Destructor.
 MEBMenu::~MEBMenu()
 {
-    destroy_menu();
+    DestroyMenu();
     free(items);
 }
 
@@ -203,11 +203,11 @@ void MEBMenu::Refresh()
     // destroy_menu();
     unpost_menu(menu);
     free_menu(menu);
-    instantiate_menu();
+    InstantiateMenu();
 }
 
 // FOR INTERNAL USE ONLY
-void MEBMenu::destroy_menu()
+void MEBMenu::DestroyMenu()
 {
     unpost_menu(menu);
     free_menu(menu);
@@ -215,4 +215,23 @@ void MEBMenu::destroy_menu()
     {
         free_item(items[i]);
     }
+}
+
+int MEBMenu::Update(int in)
+{
+    switch(in)
+    {
+    case KEY_DOWN:
+        menu_driver(menu, REQ_DOWN_ITEM);
+        wrefresh(parent->win);
+        break;
+    case KEY_UP:
+        menu_driver(menu, REQ_UP_ITEM);
+        wrefresh(parent->win);
+        break;
+    case '\n':
+        return item_index(current_item(menu));
+    }
+    
+    return -1;
 }

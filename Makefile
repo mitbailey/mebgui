@@ -2,7 +2,7 @@ CXX = g++
 CC = gcc
 CPPOBJS = src/mebgui.o examples/guimain.o
 COBJS =
-EDCXXFLAGS = -I ./ -I ./include/ -I ./examples/ -Wall -pthread $(CXXFLAGS)
+EDCXXFLAGS = -I ./ -I ./include/ -I ./examples/ -std=c++11 -Wall -pthread $(CXXFLAGS)
 EDCFLAGS = $(CFLAGS)
 EDLDFLAGS := -lpthread -lm -lmenu -lncurses $(LDFLAGS)
 TARGET = ui.out

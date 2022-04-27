@@ -18,9 +18,11 @@
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
+#define DEFAULT_W_TIMEOUT 5
+
 /**
  * @brief To be called at the beginning of the program, initializes NCURSES-specific items.
- * 
+ *
  * @param timeout Input timeout.
  */
 void ncurses_init(int timeout);
@@ -99,13 +101,13 @@ public:
     WINDOW *win;
     MEBWindow *parent;
 
-    int x() { return x_; };
-    int y() { return y_; };
-    int cols() { return cols_; };
-    int rows() { return rows_; };
+    int X() { return x_; };
+    int Y() { return y_; };
+    int Cols() { return cols_; };
+    int Rows() { return rows_; };
 
-    bool is_pos_rel() { return rel_pos; };
-    char *get_title() { return title; };
+    bool IsPosRel() { return rel_pos; };
+    char *GetTitle() { return title; };
 
 private:
     // FOR INTERNAL USE ONLY
@@ -146,30 +148,37 @@ public:
 
     /**
      * @brief Moves the menu some delta-position.
-     * 
-     * @param dx 
-     * @param dy 
+     *
+     * @param dx
+     * @param dy
      */
     void Move(int dx, int dy);
 
     /**
      * @brief Refreshes the menu.
-     * 
+     *
      */
     void Refresh();
 
     /**
      * @brief Destructor.
-     * 
+     *
      */
     ~MEBMenu();
 
-    MENU *get_menu() { return menu; };
-    MEBWindow *get_parent() { return parent; };
+    /**
+     * @brief Automatically handles up / down navigation, and returns the index of the choice selected or -1 if no selection was made.
+     * 
+     * @param in The user's input, retrieved via wgetch(...); 
+     */
+    int Update(int in);
+
+    MENU *GetMenu() { return menu; };
+    MEBWindow *GetParent() { return parent; };
 
 private:
-    void instantiate_menu();
-    void destroy_menu();
+    void InstantiateMenu();
+    void DestroyMenu();
 
     int x;
     int y;
@@ -181,5 +190,39 @@ private:
     int n_items;
     MEBWindow *parent;
 };
+
+// TODO: Split declaration and definition of input(...).
+/**
+ * @brief Method for taking input from the user.
+ *
+ * @param mwin MEBWindow the input is being taken in.
+ * @param x The window relative x-coordinate to begin at.
+ * @param y The window relative y-coordinate to begin at.
+ * @param input_msg Optional
+ * @param fmt Formatted input.
+ * @param ... Formatted input's arguments.
+ */
+template <typename... Args>
+static void input(MEBWindow *mwin, uint32_t x, uint32_t y, char *input_msg, char *fmt, Args... args)
+{
+    WINDOW *lwin = mwin->win;
+    wmove(lwin, x, y);
+    nodelay(lwin, false);
+    wrefresh(lwin);
+    echo();
+
+    if (input_msg != NULL)
+    {
+        // Print the input prompt if provided and refresh
+        mvwprintw(lwin, x, y, "%s", input_msg);
+        wrefresh(lwin);
+    }
+
+    wscanw(lwin, fmt, args...);
+
+    noecho();
+    wtimeout(lwin, DEFAULT_W_TIMEOUT);
+    wrefresh(lwin);
+}
 
 #endif // MEBGUI_HPP
