@@ -6,7 +6,9 @@
  * @date 2022.03.19
  *
  * @copyright Copyright (c) 2022
- *
+ * 
+ * MIT License
+ * 
  */
 
 #include <ncurses.h>

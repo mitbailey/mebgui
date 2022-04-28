@@ -7,6 +7,8 @@
  * 
  * @copyright Copyright (c) 2022
  * 
+ * MIT License
+ * 
  */
 
 #ifndef GUIMAIN_HPP
